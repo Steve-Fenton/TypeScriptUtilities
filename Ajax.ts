@@ -1,3 +1,6 @@
+/// <reference path="Encoding.ts" />
+/// <reference path="Http.ts" />
+
 /*
 This file has dependencies
  - Encoding.ts
