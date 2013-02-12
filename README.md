@@ -1,7 +1,14 @@
-TypeScriptUtilities
-===================
+TypeScript Utilities
+====================
 
 Some handy utilities I wrote in TypeScript - so you don't have to! Fixes and enhancements happily accepted.
+
+Contains utilities to save you time with...
+
+- Ajax
+- Notifications
+- Logging
+- Encoding
 
 License
 =======
