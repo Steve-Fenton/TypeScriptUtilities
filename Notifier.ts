@@ -10,6 +10,26 @@ Example usage:
 var overlay = new Notifier.Overlay();
 overlay.alert('Some message for the users');
 overlay.alert('Some error message', Notifier.MessageType.error);
+
+Example CSS:
+
+#NotifierOverlayAlert
+{
+    background-color: rgba(39, 48, 220, 1);
+    color: #FFF;
+    text-align: center;
+}
+
+    #NotifierOverlayAlert.messageTypeError
+    {
+        background-color: rgba(220, 48, 39, 1);
+    }
+
+    #NotifierOverlayAlert.messageTypeSuccess
+    {
+        background-color: rgba(0, 0, 0, 1);
+    }
+
 */
 
 module Notifier {
