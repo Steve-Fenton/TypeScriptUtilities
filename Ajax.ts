@@ -12,11 +12,11 @@ Author: Steve Fenton
 
 Example usage:
 
-var ajaxOkayCallback = function (response: Ajax.IAjaxResponse): void { 
+var ajaxOkayCallback = function (response: Ajax.IAjaxResponse): void {
   alert(response.responseText);
 };
 
-var ajaxProblemCallback = function (response: Ajax.IAjaxResponse): void { 
+var ajaxProblemCallback = function (response: Ajax.IAjaxResponse): void {
   alert('Failed');
 };
 
@@ -24,6 +24,14 @@ var ajaxRequest = new Ajax.Request(Http.HttpVerb.GET, '/MyUrl/');
 ajaxRequest.addHttpStatusCallback([200, 201], ajaxOkayCallback);
 ajaxRequest.addDefaultCallback(ajaxProblemCallback);
 ajaxRequest.run();
+
+You can also do a POST with data...
+
+var ajaxRequest = new Ajax.Request(Http.HttpVerb.POST, '/MyUrl/');
+ajaxRequest.addHttpStatusCallback([200, 201], ajaxOkayCallback);
+ajaxRequest.addDefaultCallback(ajaxProblemCallback);
+ajaxRequest.run('key=value&otherkey=value');
+
 */
 
 module Ajax {
@@ -81,7 +89,7 @@ module Ajax {
             this.defaultCallback = callback;
         }
 
-        run() {
+        run(data?: string) {
             var request = this.requestObject;
             var self = this;
 
@@ -108,7 +116,12 @@ module Ajax {
                 }
             }
 
-            request.send();
+            if (data) {
+                request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+                request.send(data);
+            } else {
+                request.send();
+            }
         }
 
         private setRequestObject() {
