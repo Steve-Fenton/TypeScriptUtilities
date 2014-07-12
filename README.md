@@ -7,7 +7,6 @@ Contains utilities to save you time with...
 
 - Ajax
 - Notifications
-- Logging
 - Encoding
 
 License
