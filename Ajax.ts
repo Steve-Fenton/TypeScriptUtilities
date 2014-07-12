@@ -1,141 +1,130 @@
-/// <reference path="Encoding.ts" />
-/// <reference path="Http.ts" />
-
 /*
-This file has dependencies
- - Encoding.ts
- - Http.ts (optional)
+This file has no dependencies
 
-Handles AJAX requests
+AJAX Requests
 Project: https://github.com/Steve-Fenton/TypeScriptUtilities
 Author: Steve Fenton
 
 Example usage:
 
-var ajaxOkayCallback = function (response: Ajax.IAjaxResponse): void {
-  alert(response.responseText);
-};
+    import Ajax = require('Ajax');
 
-var ajaxProblemCallback = function (response: Ajax.IAjaxResponse): void {
-  alert('Failed');
-};
+    function ajaxLogger(response) {
+        alert(response.status + ' ' + response.responseText);
+    }
 
-var ajaxRequest = new Ajax.Request(Http.HttpVerb.GET, '/MyUrl/');
-ajaxRequest.addHttpStatusCallback([200, 201], ajaxOkayCallback);
-ajaxRequest.addDefaultCallback(ajaxProblemCallback);
-ajaxRequest.run();
+    Ajax.httpGet('/test.txt', ajaxLogger, ajaxLogger);
 
-You can also do a POST with data...
+    // Add headers (you can supply any number of additional headers)
+    Ajax.httpGet('/test.txt', ajaxLogger, ajaxLogger, { name: 'Authorization', value: 'MYTOKEN' });
 
-var ajaxRequest = new Ajax.Request(Http.HttpVerb.POST, '/MyUrl/');
-ajaxRequest.addHttpStatusCallback([200, 201], ajaxOkayCallback);
-ajaxRequest.addDefaultCallback(ajaxProblemCallback);
-ajaxRequest.run('key=value&otherkey=value');
+    // Post data
+    Ajax.httpPost('/test.txt', { key: 'H12', type: 'some type' }, ajaxLogger, ajaxLogger);
 
 */
 
-module Ajax {
-    import encoding = Encoding;
 
-    export interface IHttpHeader {
-        Name: string;
-        Value: string;
-    }
+export interface IHttpHeader {
+    name: string;
+    value: string;
+}
 
-    export interface IAjaxRequest {
-        addHttpHeader(httpHeader: IHttpHeader);
-        addHttpStatusCallback(httpStatusCodes: number[], callback: any);
-        run();
-    }
+export interface IResponseHandler {
+    (response: any): any;
+}
 
-    export interface IAjaxResponse {
-        status: number;
-        responseText: string;
-    }
+export function httpGet(url: string, successCallback: IResponseHandler, failureCallback: IResponseHandler, ...headers: IHttpHeader[]): void {
+    var ajax = new Ajax();
+    ajax.send(url, HttpVerb.GET, null, successCallback, failureCallback, headers);
+}
 
-    export class Request implements IAjaxRequest {
-        private httpVerb: string;
-        private headers: IHttpHeader[] = [];
-        private callbacks: { (s: IAjaxResponse): any; }[] = [];
-        private defaultCallback: { (s: IAjaxResponse): any; } = null;
-        private requestObject: any = {};
-        private isComplete: bool = false;
+export function httpPost(url: string, data: {}, successCallback: IResponseHandler, failureCallback: IResponseHandler, ...headers: IHttpHeader[]) {
+    var ajax = new Ajax();
+    ajax.send(url, HttpVerb.POST, data, successCallback, failureCallback, headers);
+}
 
-        constructor(httpVerb: string, private uri: string, private isAsync: bool = true) {
-            this.httpVerb = httpVerb.toUpperCase();
-            this.setRequestObject();
+class HttpVerb {
+    public static CONNECT = 'CONNECT';
+    public static DELETE = 'DELETE';
+    public static GET = 'GET';
+    public static HEAD = 'HEAD';
+    public static OPTIONS = 'OPTIONS';
+    public static POST = 'POST';
+    public static PUT = 'PUT';
+    public static TRACE = 'TRACE';
+}
+
+class Ajax {
+    send(url: string, method: string, data: {}, successCallback: IResponseHandler, failureCallback: IResponseHandler, headers: IHttpHeader[]): void {
+        var isComplete = false;
+        var request = this.getRequestObject();
+        var uniqueUrl = this.getCacheBusterUrl(url);
+
+        request.open(method, url, true);
+
+        // Add headers
+        if (data !== null) {
+            request.setRequestHeader('Content-type', 'application/json');
+        }
+        for (var i = 0; i < headers.length; ++i) {
+            request.setRequestHeader(headers[i].name, headers[i].value);
         }
 
-        addHttpHeader(httpHeader: IHttpHeader): void {
-            this.headers.push(httpHeader);
-        }
-
-        addBasicAuthentication(userName: string, password: string) {
-            var token = userName + ':' + password;
-            var base64 = new encoding.Base64();
-
-            var authorization = base64.encode(token);
-            this.headers.push({ Name: 'Authorization', Value: authorization });
-        }
-
-        addHttpStatusCallback(httpStatusCodes: number[], callback: { (s: IAjaxResponse): any; }): void {
-            for (var i = 0; i < httpStatusCodes.length; ++i) {
-                var statusCode = httpStatusCodes[i];
-                this.callbacks[statusCode] = callback;
-            }
-        }
-
-        addDefaultCallback(callback: { (s: IAjaxResponse): any; }): void {
-            this.defaultCallback = callback;
-        }
-
-        run(data?: string) {
-            var request = this.requestObject;
-            var self = this;
-
-            if (self.uri.indexOf('?') > -1) {
-                self.uri += '&' + new Date().getTime();
-            } else {
-                self.uri += '?' + new Date().getTime();
-            }
-
-            request.open(self.httpVerb, self.uri, self.isAsync);
-            for (var i = 0; i < self.headers.length; ++i) {
-                request.setRequestHeader(self.headers[i].Name, self.headers[i].Value);
-            }
-
-            request.onreadystatechange = function () {
-                if (request.readyState == 4 && !self.isComplete) {
-                    self.isComplete = true;
-                    if (self.callbacks[request.status]) {
-                        var functionToCall = self.callbacks[request.status];
-                        functionToCall(<IAjaxResponse> request);
-                    } else if (self.defaultCallback) {
-                        self.defaultCallback(<IAjaxResponse> request);
-                    }
+        request.onreadystatechange = () => {
+            if (request.readyState == 4 && !isComplete) {
+                isComplete = true;
+                if (this.isResponseSuccess(request.status)) {
+                    successCallback.call(request, request);
+                } else {
+                    failureCallback.call(request, request);
                 }
             }
-
-            if (data) {
-                request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-                request.send(data);
-            } else {
-                request.send();
-            }
         }
 
-        private setRequestObject() {
-            if (XMLHttpRequest) {
-                this.requestObject = new XMLHttpRequest();
-            } else {
+        if (data !== null) {
+            request.send(JSON.stringify(data));
+        } else {
+            request.send();
+        }
+    }
+
+    private getRequestObject(): XMLHttpRequest {
+        var requestObject;
+        if (XMLHttpRequest) {
+            requestObject = new XMLHttpRequest();
+        } else {
+            try {
+                requestObject = new ActiveXObject('Msxml2.XMLHTTP');
+            } catch (e) {
                 try {
-                    this.requestObject = new ActiveXObject('Msxml2.XMLHTTP');
-                } catch (e) {
-                    try {
-                        this.requestObject = new ActiveXObject('Microsoft.XMLHTTP');
-                    } catch (e) { }
-                }
+                    requestObject = new ActiveXObject('Microsoft.XMLHTTP');
+                } catch (e) { }
             }
+        }
+
+        return requestObject;
+    }
+
+    private getCacheBusterUrl(url: string) {
+        if (url.indexOf('?') > -1) {
+            url += '&' + new Date().getTime();
+        } else {
+            url += '?' + new Date().getTime();
+        }
+        return url;
+    }
+
+    private isResponseSuccess(responseCode) {
+        var firstDigit = responseCode.toString().substring(0, 1);
+        switch (firstDigit) {
+            case 1:
+            case 2:
+            case 3:
+                // Response code is in 100, 200 or 300 range :)
+                return true;
+            default:
+                // Response code is is 400 or 500 range :(
+                return false;
         }
     }
 }
