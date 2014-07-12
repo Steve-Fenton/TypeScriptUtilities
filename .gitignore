@@ -1,0 +1,14 @@
+*.pdb
+*.js
+*.js.map
+*.cache
+*.cs
+*.csproj
+*.user
+*.config
+*.dll
+*.sln
+*.suo
+*.nuspec
+*.nupkg
+*.txt
