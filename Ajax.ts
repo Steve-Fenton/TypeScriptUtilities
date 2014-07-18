@@ -7,19 +7,19 @@ Author: Steve Fenton
 
 Example usage:
 
-    import Ajax = require('Ajax');
+import Ajax = require('Ajax');
 
-    function ajaxLogger(response) {
-        alert(response.status + ' ' + response.responseText);
-    }
+function ajaxLogger(response) {
+alert(response.status + ' ' + response.responseText);
+}
 
-    Ajax.httpGet('/test.txt', ajaxLogger, ajaxLogger);
+Ajax.httpGet('/test.txt', ajaxLogger, ajaxLogger);
 
-    // Add headers (you can supply any number of additional headers)
-    Ajax.httpGet('/test.txt', ajaxLogger, ajaxLogger, { name: 'Authorization', value: 'MYTOKEN' });
+// Add headers (you can supply any number of additional headers)
+Ajax.httpGet('/test.txt', ajaxLogger, ajaxLogger, { name: 'Authorization', value: 'MYTOKEN' });
 
-    // Post data
-    Ajax.httpPost('/test.txt', { key: 'H12', type: 'some type' }, ajaxLogger, ajaxLogger);
+// Post data
+Ajax.httpPost('/test.txt', { key: 'H12', type: 'some type' }, ajaxLogger, ajaxLogger);
 
 */
 
@@ -89,7 +89,7 @@ class Ajax {
     }
 
     private getRequestObject(): XMLHttpRequest {
-        var requestObject;
+        var requestObject: XMLHttpRequest;
         if (XMLHttpRequest) {
             requestObject = new XMLHttpRequest();
         } else {
@@ -114,12 +114,12 @@ class Ajax {
         return url;
     }
 
-    private isResponseSuccess(responseCode) {
+    private isResponseSuccess(responseCode: number) {
         var firstDigit = responseCode.toString().substring(0, 1);
         switch (firstDigit) {
-            case 1:
-            case 2:
-            case 3:
+            case '1':
+            case '2':
+            case '3':
                 // Response code is in 100, 200 or 300 range :)
                 return true;
             default:
