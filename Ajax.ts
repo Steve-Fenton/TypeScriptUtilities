@@ -65,6 +65,7 @@ class Ajax {
         // Add headers
         if (data !== null) {
             request.setRequestHeader('Content-type', 'application/json');
+            request.setRequestHeader('Accept', 'application/json');
         }
         for (var i = 0; i < headers.length; ++i) {
             request.setRequestHeader(headers[i].name, headers[i].value);
