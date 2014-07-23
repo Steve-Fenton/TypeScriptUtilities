@@ -1,5 +1,4 @@
 *.pdb
-*.js
 *.js.map
 *.cache
 *.cs
