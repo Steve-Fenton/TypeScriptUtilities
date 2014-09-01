@@ -18,7 +18,7 @@ export class Base64 {
     encode(input: string): string {
         var output = '';
         var i = 0;
-        var charA, charB, charC, encA, encB, encC, encD;
+        var charA: number, charB: number, charC: number, encA: number, encB: number, encC: number, encD: number;
 
         input = this.utf8Encode(input);
 
@@ -51,7 +51,7 @@ export class Base64 {
     decode(input: string): string {
         var output = '';
         var i = 0;
-        var charA, charB, charC, encA, encB, encC, encD;
+        var charA: number, charB: number, charC: number, encA: number, encB: number, encC: number, encD: number;
 
         input = input.replace(/[^A-Za-z0-9\+\/\=]/g, '');
 

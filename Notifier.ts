@@ -39,9 +39,6 @@ export class MessageType {
 }
 
 export class Overlay {
-
-    private alertTimer;
-
     alert(message: string, messageType: string = MessageType.normal) {
         var notification = document.getElementById('NotifierOverlayAlert') || this.createMessageElement();
 
